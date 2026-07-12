@@ -58,9 +58,7 @@
       },
       "router": {}
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/120b1d64-da1b-42ab-b494-1b3436956ff2"
     }
