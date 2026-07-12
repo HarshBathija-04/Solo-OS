@@ -1,0 +1,60 @@
+# ── Monorepo root ignore (Solo-OS) ──
+# Applies across both Website/ and Mobile app/. Nested .gitignore files still apply too.
+
+# Dependencies
+**/node_modules/
+
+# Env / secrets — NEVER commit real values
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Python venv (mobile tooling)
+**/.venv/
+
+# Next.js (website)
+**/.next/
+**/out/
+**/build/
+**/.vercel/
+**/next-env.d.ts
+**/tsconfig.tsbuildinfo
+
+# Expo / React Native (mobile)
+**/.expo/
+**/dist/
+**/web-build/
+**/expo-env.d.ts
+**/.metro-health-check*
+
+# Native signing material
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/credentials.json
+
+# Local Prisma DB files
+**/prisma/*.db
+**/prisma/*.db-journal
+
+# Supabase local
+**/supabase/.temp/
+**/supabase/.branches/
+
+# Logs
+**/*.log
+**/npm-debug.*
+**/yarn-debug.*
+**/yarn-error.*
+
+# Scratch / temp
+**/.tmp_*
+**/*.orig.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
