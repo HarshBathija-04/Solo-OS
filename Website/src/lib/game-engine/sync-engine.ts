@@ -159,18 +159,35 @@ export async function mergePostgresToSnapshot(userId: string, snapshotData: any)
     cloned.game.attributes = Array.from(existingAttrMap.values());
   }
 
-  // We can inject web-generated daily quests that aren't yet in the mobile snapshot.
+  // Inject web-generated quests that aren't yet in the mobile snapshot.
+  // We fetch ALL active quests, plus any completed today.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const activeQuests = await prisma.quest.findMany({
-    where: { userId, assignedDate: { gte: today }, status: "ACTIVE" },
+  
+  const relevantQuests = await prisma.quest.findMany({
+    where: { 
+      userId,
+      OR: [
+        { status: "ACTIVE" },
+        { status: "COMPLETED", updatedAt: { gte: today } }
+      ]
+    },
   });
 
-  if (activeQuests.length > 0) {
+  if (relevantQuests.length > 0) {
     const existingMissionIds = new Set((cloned.game.missions || []).map((m: any) => m.id));
     const newMissions = [];
-    for (const q of activeQuests) {
+    for (const q of relevantQuests) {
       if (!existingMissionIds.has(q.id)) {
+        
+        let attributeRewards = [];
+        if (q.attributeXp && typeof q.attributeXp === 'object') {
+          attributeRewards = Object.entries(q.attributeXp).map(([code, xp]) => ({
+            code,
+            xp: Number(xp)
+          }));
+        }
+
         newMissions.push({
           id: q.id,
           title: q.title,
@@ -178,17 +195,17 @@ export async function mergePostgresToSnapshot(userId: string, snapshotData: any)
           type: q.type === "DAILY" ? "DAILY" : (q.type === "MAIN" ? "MAIN" : "SIDE"),
           difficulty: q.difficulty || "C",
           category: q.category,
-          status: "AVAILABLE",
+          status: q.status === "COMPLETED" ? "COMPLETED" : "AVAILABLE",
           objectiveType: "BOOLEAN",
           targetValue: 1,
-          currentProgress: 0,
+          currentProgress: q.status === "COMPLETED" ? 1 : 0,
           xpReward: q.baseXp,
           coinReward: q.coinReward,
-          attributeRewards: [],
+          attributeRewards,
           activityType: "CUSTOM",
           startDate: q.assignedDate.toISOString(),
           deadline: q.deadline ? q.deadline.toISOString() : null,
-          completedAt: null,
+          completedAt: q.status === "COMPLETED" ? q.updatedAt.toISOString() : null,
           failureConsequence: q.failureNote,
           verificationType: "MANUAL",
           bossId: q.bossBattleId,
