@@ -89,6 +89,20 @@ export async function mergePostgresToSnapshot(userId: string, snapshotData: any)
       lifetimeXp: Math.max(cloned.game.profile?.lifetimeXp || 0, profile.totalXp),
       coins: Math.max(cloned.game.profile?.coins || 0, profile.coins),
       rank: profile.rank,
+      performance: {
+        total: profile.lifeScore,
+        status: profile.lifeScore >= 85 ? 'ASCENDING' :
+                profile.lifeScore >= 70 ? 'STABLE' :
+                profile.lifeScore >= 50 ? 'FLUCTUATING' :
+                profile.lifeScore >= 30 ? 'UNSTABLE' : 'CRITICAL',
+        categories: {
+          discipline: profile.disciplineScore,
+          knowledge: profile.knowledgeScore,
+          physical: profile.physicalScore,
+          focus: profile.focusScore,
+          recovery: profile.recoveryScore,
+        }
+      }
     };
   }
 

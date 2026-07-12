@@ -230,3 +230,52 @@ export async function logMetricAction(input: { kind: string; value: number }) {
   revalidatePath("/");
   return { ok: true };
 }
+
+export async function resetProfileAction() {
+  const userId = await requireUserId();
+  
+  await prisma.$transaction([
+    prisma.playerProfile.update({
+      where: { userId },
+      data: {
+        level: 1,
+        totalXp: 0,
+        currentXp: 0,
+        coins: 0,
+        rank: "Initiate",
+        activeDays: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        disciplineScore: 0,
+        knowledgeScore: 0,
+        physicalScore: 0,
+        focusScore: 0,
+        recoveryScore: 0,
+        lifeScore: 0,
+      },
+    }),
+    prisma.attribute.updateMany({
+      where: { userId },
+      data: { level: 1, xp: 0, totalXp: 0 },
+    }),
+    prisma.gameStateSnapshot.deleteMany({ where: { userId } }),
+    prisma.questCompletion.deleteMany({ where: { userId } }),
+    prisma.quest.deleteMany({ where: { userId } }),
+    prisma.bossBattleLog.deleteMany({ where: { battle: { userId } } }),
+    prisma.bossBattle.deleteMany({ where: { userId } }),
+    prisma.focusSession.deleteMany({ where: { userId } }),
+    prisma.streak.updateMany({ where: { userId }, data: { current: 0, longest: 0, shieldsUsed: 0 } }),
+    prisma.userAchievement.updateMany({ where: { userId }, data: { progress: 0, unlocked: false } }),
+    prisma.activityLog.deleteMany({ where: { userId } }),
+    prisma.habitLog.deleteMany({ where: { userId } }),
+    prisma.urgeLog.deleteMany({ where: { userId } }),
+    prisma.coinTransaction.deleteMany({ where: { userId } }),
+    prisma.levelProgress.deleteMany({ where: { userId } }),
+    prisma.attributeHistory.deleteMany({ where: { userId } }),
+    prisma.notification.deleteMany({ where: { userId } }),
+    prisma.report.deleteMany({ where: { userId } }),
+  ]);
+  
+  revalidatePath("/");
+  return { ok: true };
+}

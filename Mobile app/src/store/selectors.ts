@@ -66,5 +66,9 @@ export function buildPerformanceInput(): PerformanceInput {
 }
 
 export function currentPerformance() {
+  const s = useGameStore.getState();
+  if (s.profile?.performance) {
+    return s.profile.performance;
+  }
   return computePerformance(buildPerformanceInput());
 }

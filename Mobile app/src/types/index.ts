@@ -350,6 +350,7 @@ export interface PlayerProfile {
   sleepTargetHours: number;
   onboardingComplete: boolean;
   privacyMode: boolean;
+  performance?: PerformanceScore;
   createdAt: string;
   updatedAt: string;
 }

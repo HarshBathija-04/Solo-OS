@@ -4,6 +4,7 @@ import { signOut } from "@/auth";
 import { Panel } from "@/components/ui/panel";
 import { SettingsForm, type SettingsVM } from "./settings-form";
 import { LogOut } from "lucide-react";
+import { ResetButton } from "./reset-button";
 
 export default async function SettingsPage() {
   const userId = await requireUserId();
@@ -31,16 +32,19 @@ export default async function SettingsPage() {
 
       <SettingsForm initial={vm} />
 
-      <Panel className="flex items-center justify-between p-5">
+      <Panel className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 gap-4">
         <div>
           <div className="font-display font-semibold text-slate-100">{user.name}</div>
           <div className="text-sm text-slate-500">{user.email}</div>
         </div>
-        <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-          <button type="submit" className="btn-danger">
-            <LogOut className="h-4 w-4" /> Sign Out
-          </button>
-        </form>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <ResetButton />
+          <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }} className="w-full sm:w-auto">
+            <button type="submit" className="btn-secondary w-full sm:w-auto">
+              <LogOut className="h-4 w-4" /> Sign Out
+            </button>
+          </form>
+        </div>
       </Panel>
     </div>
   );
