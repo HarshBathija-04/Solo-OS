@@ -1,4 +1,4 @@
-import type { Quest, QuestCompletion } from "@prisma/client";
+import type { Quest, QuestCompletion } from "@/lib/game-types";
 import type { QuestVM } from "@/components/game/quest-board";
 
 export function toQuestVM(q: Quest & { completion: QuestCompletion | null }): QuestVM {

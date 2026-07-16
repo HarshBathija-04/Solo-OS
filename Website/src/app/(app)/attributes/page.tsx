@@ -1,6 +1,4 @@
-import { requireUserId } from "@/lib/current-user";
-import { getAttributes } from "@/lib/player-data";
-import { prisma } from "@/lib/prisma";
+import { getAttributes, getAttributeHistory } from "@/lib/player-data";
 import { Panel } from "@/components/ui/panel";
 import { ProgressBar } from "@/components/ui/bars";
 import { attributeDef } from "@/lib/game-engine/attributes";
@@ -8,15 +6,10 @@ import { attrXpForLevel } from "@/lib/game-engine/xp-engine";
 import { pct } from "@/lib/utils";
 
 export default async function AttributesPage() {
-  const userId = await requireUserId();
-  const attributes = await getAttributes(userId);
+  const attributes = await getAttributes();
 
   // recent contributions per attribute (last 20 history rows)
-  const history = await prisma.attributeHistory.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 60,
-  });
+  const history = await getAttributeHistory(60);
 
   return (
     <div className="space-y-6">

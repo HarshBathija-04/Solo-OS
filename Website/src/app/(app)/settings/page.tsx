@@ -1,17 +1,21 @@
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
-import { signOut } from "@/auth";
+import { redirect } from "next/navigation";
+import { getSettings } from "@/lib/player-data";
+import { createClient } from "@/lib/supabase/server";
 import { Panel } from "@/components/ui/panel";
 import { SettingsForm, type SettingsVM } from "./settings-form";
 import { LogOut } from "lucide-react";
 import { ResetButton } from "./reset-button";
 
 export default async function SettingsPage() {
-  const userId = await requireUserId();
-  const [settings, user] = await Promise.all([
-    prisma.userSettings.findUniqueOrThrow({ where: { userId } }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId } }),
+  const supabase = await createClient();
+  const [settings, { data: userData }] = await Promise.all([
+    getSettings(),
+    supabase.auth.getUser(),
   ]);
+  const user = {
+    name: userData.user?.user_metadata?.name ?? "Hunter",
+    email: userData.user?.email ?? "",
+  };
 
   const vm: SettingsVM = {
     wakeTarget: settings.wakeTarget,
@@ -39,7 +43,15 @@ export default async function SettingsPage() {
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <ResetButton />
-          <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }} className="w-full sm:w-auto">
+          <form
+            action={async () => {
+              "use server";
+              const sb = await createClient();
+              await sb.auth.signOut();
+              redirect("/login");
+            }}
+            className="w-full sm:w-auto"
+          >
             <button type="submit" className="btn-secondary w-full sm:w-auto">
               <LogOut className="h-4 w-4" /> Sign Out
             </button>

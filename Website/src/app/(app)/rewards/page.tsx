@@ -1,13 +1,10 @@
-import { requireUserId } from "@/lib/current-user";
-import { getRewards } from "@/lib/player-data";
-import { prisma } from "@/lib/prisma";
+import { getRewards, getProfileView } from "@/lib/player-data";
 import { RewardShop, type RewardVM } from "./reward-shop";
 
 export default async function RewardsPage() {
-  const userId = await requireUserId();
   const [rewards, profile] = await Promise.all([
-    getRewards(userId),
-    prisma.playerProfile.findUniqueOrThrow({ where: { userId } }),
+    getRewards(),
+    getProfileView(),
   ]);
 
   const vms: RewardVM[] = rewards.map((r) => ({

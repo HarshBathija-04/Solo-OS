@@ -1,4 +1,4 @@
-# Deploying ASCEND//SYSTEM to Vercel
+# Deploying ARISE OS to Vercel
 
 Your database (Supabase) is already created, migrated, and seeded — production
 will use that **same** database, so there is nothing to re-seed. You only need to
@@ -77,9 +77,9 @@ That's it — open the printed URL and log in.
    ```powershell
    git init
    git add .
-   git commit -m "ASCEND//SYSTEM"
+   git commit -m "ARISE OS"
    git branch -M main
-   git remote add origin https://github.com/<you>/ascend-system.git
+   git remote add origin https://github.com/<you>/arise-os.git
    git push -u origin main
    ```
    (Confirm `.env` is NOT listed by `git status` — it must stay ignored.)

@@ -3,17 +3,23 @@ import { redirect } from "next/navigation";
 import { Bot } from "lucide-react";
 import { Sidebar } from "@/components/nav/sidebar";
 import { currentUserId } from "@/lib/current-user";
-import { ensureTodayQuests } from "@/lib/game-engine/service-extra";
+import { ensureTodayQuestsViaApi } from "@/lib/player-data";
+import { RealtimeRefresher } from "@/components/realtime-refresher";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const userId = await currentUserId();
   if (!userId) redirect("/login");
 
   // Make sure the player always has today's quests waiting for them.
-  await ensureTodayQuests(userId);
+  try {
+    await ensureTodayQuestsViaApi();
+  } catch {
+    // Non-fatal: /v1/quests/today lazily ensures quests on read as well.
+  }
 
   return (
     <div className="min-h-screen">
+      <RealtimeRefresher />
       <Sidebar />
       <main className="px-4 pb-24 pt-20 lg:ml-64 lg:px-8 lg:pt-8">
         <div className="mx-auto max-w-6xl">{children}</div>

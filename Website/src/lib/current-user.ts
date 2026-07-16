@@ -1,10 +1,12 @@
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 /** Returns the authenticated user's id, or null. */
 export async function currentUserId(): Promise<string | null> {
-  const session = await auth();
-  return session?.user?.id ?? null;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
 }
 
 /** Throws if not authenticated — for server actions. */
@@ -14,9 +16,13 @@ export async function requireUserId(): Promise<string> {
   return id;
 }
 
-export async function requireProfile() {
-  const userId = await requireUserId();
-  const profile = await prisma.playerProfile.findUnique({ where: { userId } });
-  if (!profile) throw new Error("Profile not found");
-  return profile;
+/** Returns the Supabase access token for calling the Express API. */
+export async function requireAccessToken(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error("Not authenticated");
+  return token;
 }

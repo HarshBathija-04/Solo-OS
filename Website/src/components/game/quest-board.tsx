@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Clock, X, ChevronRight, CircleSlash } from "lucide-react";
-import type { Difficulty, QuestStatus, QuestType } from "@prisma/client";
+import type { Difficulty, QuestStatus, QuestType } from "@/lib/game-types";
 import { DifficultyChip } from "@/components/ui/bars";
 import { EmptyState } from "@/components/ui/panel";
 import { completeQuestAction } from "@/app/actions";

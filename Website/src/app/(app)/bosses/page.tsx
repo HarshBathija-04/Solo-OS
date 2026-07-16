@@ -1,16 +1,13 @@
-import { requireUserId } from "@/lib/current-user";
-import { getActiveBossBattles } from "@/lib/player-data";
-import { prisma } from "@/lib/prisma";
+import { getActiveBossBattles, getAllBosses } from "@/lib/player-data";
 import { BossPanel } from "@/components/game/boss-panel";
 import { Panel } from "@/components/ui/panel";
 import { RarityBadge } from "@/components/ui/bars";
 import { Skull, Lock } from "lucide-react";
 
 export default async function BossesPage() {
-  const userId = await requireUserId();
   const [battles, allBosses] = await Promise.all([
-    getActiveBossBattles(userId),
-    prisma.boss.findMany(),
+    getActiveBossBattles(),
+    getAllBosses(),
   ]);
 
   const engagedKeys = new Set(battles.map((b) => b.boss.key));

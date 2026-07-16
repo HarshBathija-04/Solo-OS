@@ -1,4 +1,4 @@
-import type { Attribute } from "@prisma/client";
+import type { Attribute } from "@/lib/game-types";
 import { ProgressBar } from "@/components/ui/bars";
 import { attributeDef } from "@/lib/game-engine/attributes";
 import { attrXpForLevel } from "@/lib/game-engine/xp-engine";

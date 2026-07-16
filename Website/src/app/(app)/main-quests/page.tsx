@@ -1,14 +1,8 @@
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
+import { getMainQuests } from "@/lib/player-data";
 import { MainQuestBoard, type MainQuestVM } from "./main-quest-board";
 
 export default async function MainQuestsPage() {
-  const userId = await requireUserId();
-  const mainQuests = await prisma.mainQuest.findMany({
-    where: { userId },
-    include: { stages: { orderBy: { order: "asc" } } },
-    orderBy: { order: "asc" },
-  });
+  const mainQuests = await getMainQuests();
 
   const quests: MainQuestVM[] = mainQuests.map((mq) => ({
     id: mq.id,

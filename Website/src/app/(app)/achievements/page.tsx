@@ -1,16 +1,11 @@
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
+import { getAchievements } from "@/lib/player-data";
 import { Panel } from "@/components/ui/panel";
 import { RarityBadge, ProgressBar } from "@/components/ui/bars";
 import { Trophy, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default async function AchievementsPage() {
-  const userId = await requireUserId();
-  const rows = await prisma.userAchievement.findMany({
-    where: { userId },
-    include: { achievement: true },
-  });
+  const rows = await getAchievements();
 
   const unlocked = rows.filter((r) => r.unlocked);
   const visible = rows

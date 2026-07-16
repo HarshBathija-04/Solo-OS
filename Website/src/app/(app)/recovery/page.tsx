@@ -1,16 +1,14 @@
-import { requireUserId } from "@/lib/current-user";
-import { getOpenRecoveryQuest } from "@/lib/player-data";
-import { prisma } from "@/lib/prisma";
+import { getOpenRecoveryQuest, getRecoveryHistory } from "@/lib/player-data";
 import { Panel, EmptyState } from "@/components/ui/panel";
 import { RecoveryQuestCard } from "./recovery-quest";
 import { HeartPulse, ShieldCheck } from "lucide-react";
 
 export default async function RecoveryPage() {
-  const userId = await requireUserId();
-  const [open, history] = await Promise.all([
-    getOpenRecoveryQuest(userId),
-    prisma.recoveryQuest.findMany({ where: { userId, completed: true }, orderBy: { completedAt: "desc" }, take: 10 }),
+  const [open, allHistory] = await Promise.all([
+    getOpenRecoveryQuest(),
+    getRecoveryHistory(),
   ]);
+  const history = allHistory.slice(0, 10);
 
   return (
     <div className="space-y-6">

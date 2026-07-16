@@ -3,56 +3,44 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
-import {
-  completeQuest,
-  completeFocusSession,
-  logMainQuestProgress,
-} from "@/lib/game-engine/service";
-import {
-  logHabit,
-  logUrge,
-  startFocusSession,
-  completeRecoveryQuest,
-  purchaseReward,
-  createReward,
-  ensureTodayQuests,
-} from "@/lib/game-engine/service-extra";
-import { logActivity } from "@/lib/game-engine/service";
-import type { FocusCategory } from "@prisma/client";
+import { apiFetch } from "@/lib/api-client";
 
 const questResult = z.enum(["COMPLETED", "PARTIAL", "FAILED"]);
 
 export async function completeQuestAction(input: { questId: string; result: string }) {
-  const userId = await requireUserId();
   const schema = z.object({ questId: z.string().min(1), result: questResult });
   const { questId, result } = schema.parse(input);
-  const award = await completeQuest(userId, questId, result);
+  const { award } = await apiFetch(`/v1/quests/${questId}/complete`, {
+    method: "POST",
+    body: JSON.stringify({ result }),
+  });
   revalidatePath("/");
   revalidatePath("/quests");
   return award;
 }
 
 export async function logMainQuestProgressAction(input: { stageId: string; amount: number }) {
-  const userId = await requireUserId();
   const schema = z.object({
     stageId: z.string().min(1),
     amount: z.number().int().min(1).max(50),
   });
   const { stageId, amount } = schema.parse(input);
-  const res = await logMainQuestProgress(userId, stageId, amount);
+  const res = await apiFetch(`/v1/main-quests/stages/${stageId}/progress`, {
+    method: "POST",
+    body: JSON.stringify({ amount }),
+  });
   revalidatePath("/main-quests");
   revalidatePath("/");
-  return res;
+  const { ok: _ok, ...rest } = res;
+  return rest;
 }
 
 export async function generateTodayQuestsAction() {
-  const userId = await requireUserId();
-  const res = await ensureTodayQuests(userId);
+  const res = await apiFetch("/v1/quests/generate", { method: "POST", body: "{}" });
   revalidatePath("/");
   revalidatePath("/quests");
-  return res;
+  const { ok: _ok, ...rest } = res;
+  return rest;
 }
 
 const focusCategory = z.enum([
@@ -64,20 +52,17 @@ export async function startFocusAction(input: {
   plannedMinutes: number;
   questId?: string;
 }) {
-  const userId = await requireUserId();
   const schema = z.object({
     category: focusCategory,
     plannedMinutes: z.number().int().min(5).max(240),
     questId: z.string().optional(),
   });
   const { category, plannedMinutes, questId } = schema.parse(input);
-  const session = await startFocusSession({
-    userId,
-    category: category as FocusCategory,
-    plannedMinutes,
-    questId,
+  const { sessionId } = await apiFetch("/v1/focus/start", {
+    method: "POST",
+    body: JSON.stringify({ category, plannedMinutes, questId }),
   });
-  return { sessionId: session.id };
+  return { sessionId };
 }
 
 export async function completeFocusAction(input: {
@@ -85,14 +70,16 @@ export async function completeFocusAction(input: {
   actualMinutes: number;
   result: string;
 }) {
-  const userId = await requireUserId();
   const schema = z.object({
     sessionId: z.string().min(1),
     actualMinutes: z.number().int().min(0).max(480),
     result: z.enum(["COMPLETE", "PARTIAL", "ABANDONED"]),
   });
   const { sessionId, actualMinutes, result } = schema.parse(input);
-  const award = await completeFocusSession({ userId, sessionId, actualMinutes, result });
+  const { award } = await apiFetch(`/v1/focus/${sessionId}/complete`, {
+    method: "POST",
+    body: JSON.stringify({ actualMinutes, result }),
+  });
   revalidatePath("/");
   revalidatePath("/focus");
   return award;
@@ -103,14 +90,13 @@ export async function logHabitAction(input: {
   result: string;
   note?: string;
 }) {
-  const userId = await requireUserId();
   const schema = z.object({
     habitKey: z.string().min(1),
     result: z.enum(["DONE", "MISSED", "CLEAN", "RELAPSE"]),
     note: z.string().max(500).optional(),
   });
   const parsed = schema.parse(input);
-  await logHabit({ userId, ...parsed });
+  await apiFetch("/v1/habits/log", { method: "POST", body: JSON.stringify(parsed) });
   revalidatePath("/");
   revalidatePath("/shadow");
   revalidatePath("/streaks");
@@ -125,7 +111,6 @@ export async function logUrgeAction(input: {
   location?: string;
   reason?: string;
 }) {
-  const userId = await requireUserId();
   const schema = z.object({
     habitKey: z.string().min(1),
     resisted: z.boolean(),
@@ -135,28 +120,29 @@ export async function logUrgeAction(input: {
     reason: z.string().max(300).optional(),
   });
   const parsed = schema.parse(input);
-  await logUrge({ userId, ...parsed });
+  await apiFetch("/v1/urges", { method: "POST", body: JSON.stringify(parsed) });
   revalidatePath("/recovery");
   revalidatePath("/shadow");
   return { ok: true };
 }
 
 export async function completeRecoveryAction(input: { id: string }) {
-  const userId = await requireUserId();
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  await completeRecoveryQuest(userId, id);
+  await apiFetch(`/v1/recovery/${id}/complete`, { method: "POST", body: "{}" });
   revalidatePath("/recovery");
   revalidatePath("/");
   return { ok: true };
 }
 
 export async function purchaseRewardAction(input: { rewardId: string }) {
-  const userId = await requireUserId();
   const { rewardId } = z.object({ rewardId: z.string().min(1) }).parse(input);
-  const res = await purchaseReward(userId, rewardId);
+  const res = await apiFetch(`/v1/rewards/${rewardId}/purchase`, {
+    method: "POST",
+    body: "{}",
+  });
   revalidatePath("/rewards");
   revalidatePath("/");
-  return res;
+  return { ok: true, balance: res.balance as number };
 }
 
 export async function createRewardAction(input: {
@@ -165,7 +151,6 @@ export async function createRewardAction(input: {
   cost: number;
   icon?: string;
 }) {
-  const userId = await requireUserId();
   const schema = z.object({
     title: z.string().min(1).max(80),
     description: z.string().max(200),
@@ -173,20 +158,14 @@ export async function createRewardAction(input: {
     icon: z.string().max(40).optional(),
   });
   const parsed = schema.parse(input);
-  await createReward({ userId, ...parsed });
+  await apiFetch("/v1/rewards", { method: "POST", body: JSON.stringify(parsed) });
   revalidatePath("/rewards");
   return { ok: true };
 }
 
 export async function equipTitleAction(input: { titleId: string }) {
-  const userId = await requireUserId();
   const { titleId } = z.object({ titleId: z.string().min(1) }).parse(input);
-  // Verify the player owns the title before equipping.
-  const owned = await prisma.userTitle.findUnique({
-    where: { userId_titleId: { userId, titleId } },
-  });
-  if (!owned) throw new Error("Title not owned");
-  await prisma.playerProfile.update({ where: { userId }, data: { equippedTitleId: titleId } });
+  await apiFetch(`/v1/titles/${titleId}/equip`, { method: "POST", body: "{}" });
   revalidatePath("/titles");
   revalidatePath("/");
   return { ok: true };
@@ -201,7 +180,6 @@ export async function updateSettingsAction(input: {
   aiProvider?: string;
   aiModel?: string;
 }) {
-  const userId = await requireUserId();
   const schema = z.object({
     wakeTarget: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     sleepTarget: z.string().regex(/^\d{2}:\d{2}$/).optional(),
@@ -212,70 +190,29 @@ export async function updateSettingsAction(input: {
     aiModel: z.string().max(60).optional(),
   });
   const data = schema.parse(input);
-  await prisma.userSettings.update({ where: { userId }, data });
+  await apiFetch("/v1/settings", { method: "PATCH", body: JSON.stringify(data) });
   revalidatePath("/settings");
   return { ok: true };
 }
 
 /** Manual metric logging (steps, sleep, reels minutes, run) with sane caps. */
 export async function logMetricAction(input: { kind: string; value: number }) {
-  const userId = await requireUserId();
   const schema = z.object({
     kind: z.enum(["steps", "sleep_hours", "reels_minutes", "run_km", "gaming_minutes"]),
     value: z.number().min(0).max(100000),
   });
   const { kind, value } = schema.parse(input);
-  await logActivity(userId, kind, value);
+  await apiFetch("/v1/analytics/metrics", {
+    method: "POST",
+    body: JSON.stringify({ kind, value }),
+  });
   revalidatePath("/analytics");
   revalidatePath("/");
   return { ok: true };
 }
 
 export async function resetProfileAction() {
-  const userId = await requireUserId();
-  
-  await prisma.$transaction([
-    prisma.playerProfile.update({
-      where: { userId },
-      data: {
-        level: 1,
-        totalXp: 0,
-        currentXp: 0,
-        coins: 0,
-        rank: "Initiate",
-        activeDays: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        disciplineScore: 0,
-        knowledgeScore: 0,
-        physicalScore: 0,
-        focusScore: 0,
-        recoveryScore: 0,
-        lifeScore: 0,
-      },
-    }),
-    prisma.attribute.updateMany({
-      where: { userId },
-      data: { level: 1, xp: 0, totalXp: 0 },
-    }),
-    prisma.gameStateSnapshot.deleteMany({ where: { userId } }),
-    prisma.questCompletion.deleteMany({ where: { userId } }),
-    prisma.quest.deleteMany({ where: { userId } }),
-    prisma.bossBattleLog.deleteMany({ where: { battle: { userId } } }),
-    prisma.bossBattle.deleteMany({ where: { userId } }),
-    prisma.focusSession.deleteMany({ where: { userId } }),
-    prisma.streak.updateMany({ where: { userId }, data: { current: 0, longest: 0, shieldsUsed: 0 } }),
-    prisma.userAchievement.updateMany({ where: { userId }, data: { progress: 0, unlocked: false } }),
-    prisma.activityLog.deleteMany({ where: { userId } }),
-    prisma.habitLog.deleteMany({ where: { userId } }),
-    prisma.urgeLog.deleteMany({ where: { userId } }),
-    prisma.coinTransaction.deleteMany({ where: { userId } }),
-    prisma.levelProgress.deleteMany({ where: { userId } }),
-    prisma.attributeHistory.deleteMany({ where: { userId } }),
-    prisma.notification.deleteMany({ where: { userId } }),
-    prisma.report.deleteMany({ where: { userId } }),
-  ]);
-  
+  await apiFetch("/v1/account/reset", { method: "POST", body: "{}" });
   revalidatePath("/");
   return { ok: true };
 }

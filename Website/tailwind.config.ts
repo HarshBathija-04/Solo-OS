@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * ASCEND//SYSTEM design tokens.
+ * ARISE//OS design tokens.
  * Dark fantasy + cyber interface: void black base, deep navy surfaces,
  * electric blue + arcane purple energy, gold for legendary, restrained red for danger.
  */

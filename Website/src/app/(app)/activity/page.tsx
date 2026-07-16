@@ -1,15 +1,14 @@
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
+import { getActivityFeed, getRecentNotifications } from "@/lib/player-data";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { Coins, Activity as ActivityIcon, Bell } from "lucide-react";
 
 export default async function ActivityPage() {
-  const userId = await requireUserId();
-  const [activities, coins, notifications] = await Promise.all([
-    prisma.activityLog.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 30 }),
-    prisma.coinTransaction.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 20 }),
-    prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 30 }),
+  const [feed, notifications] = await Promise.all([
+    getActivityFeed(),
+    getRecentNotifications(undefined, 30),
   ]);
+  const activities = feed.activities.slice(0, 30);
+  const coins = feed.coins.slice(0, 20);
 
   return (
     <div className="space-y-6">

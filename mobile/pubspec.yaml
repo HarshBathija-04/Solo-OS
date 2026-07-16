@@ -1,0 +1,25 @@
+name: arise_mobile
+description: "Arise OS mobile client — Solo Leveling themed gamified productivity."
+publish_to: "none"
+version: 0.1.0+1
+
+# Color.withValues() + DialogThemeData require Flutter 3.29+ (Dart 3.7+).
+environment:
+  sdk: ">=3.7.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.5.0
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  dio: ^5.4.0
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

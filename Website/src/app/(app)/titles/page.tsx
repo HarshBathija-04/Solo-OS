@@ -1,22 +1,22 @@
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
+import { getTitlesData } from "@/lib/player-data";
+import { TITLES } from "@/lib/game-engine/content/titles";
 import { TitleList, type TitleVM } from "./title-list";
 
 export default async function TitlesPage() {
-  const userId = await requireUserId();
-  const [titles, owned, profile] = await Promise.all([
-    prisma.title.findMany(),
-    prisma.userTitle.findMany({ where: { userId } }),
-    prisma.playerProfile.findUniqueOrThrow({ where: { userId } }),
-  ]);
-  const ownedSet = new Set(owned.map((o) => o.titleId));
+  const { owned, equippedTitleId } = await getTitlesData();
+  const ownedByKey = new Map(owned.map((t) => [t.key, t]));
 
-  const vms: TitleVM[] = titles
-    .map((t) => ({
-      id: t.id, name: t.name, description: t.description, rarity: t.rarity,
-      xpBonusPct: t.xpBonusPct, owned: ownedSet.has(t.id),
-    }))
-    .sort((a, b) => Number(b.owned) - Number(a.owned));
+  const vms: TitleVM[] = TITLES.map((def) => {
+    const o = ownedByKey.get(def.key);
+    return {
+      id: o?.id ?? `locked:${def.key}`,
+      name: def.name,
+      description: def.description,
+      rarity: def.rarity,
+      xpBonusPct: def.xpBonusPct,
+      owned: !!o,
+    };
+  }).sort((a, b) => Number(b.owned) - Number(a.owned));
 
   return (
     <div className="space-y-6">
@@ -25,7 +25,7 @@ export default async function TitlesPage() {
         <h1 className="font-display text-2xl font-bold text-slate-100">Titles</h1>
         <p className="mt-1 text-sm text-slate-500">Earned through achievements and bosses. Equip one — some grant a small XP bonus.</p>
       </div>
-      <TitleList titles={vms} equippedId={profile.equippedTitleId} />
+      <TitleList titles={vms} equippedId={equippedTitleId} />
     </div>
   );
 }

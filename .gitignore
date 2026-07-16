@@ -1,5 +1,5 @@
-# ── Monorepo root ignore (Solo-OS) ──
-# Applies across both Website/ and Mobile app/. Nested .gitignore files still apply too.
+# ── Monorepo root ignore (Arise-OS) ──
+# Applies across Website/, backend/, and mobile/. Nested .gitignore files still apply too.
 
 # Dependencies
 **/node_modules/

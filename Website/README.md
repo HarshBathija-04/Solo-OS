@@ -1,7 +1,7 @@
-# ASCEND//SYSTEM
+# ARISE//OS
 
-> **ASCENSION OS** — a personal real-life RPG progression operating system.
-> Codename: *Ascendant Protocol*. Built for one player: **Harsh Bathija**.
+> **ARISE OS** — a personal real-life RPG progression operating system.
+> Built for one player: **Harsh Bathija**.
 
 Turn real actions — study, DSA, workouts, deep work, waking at 5 AM, resisting
 distraction — into **XP, levels, ranks, attributes, streaks, quests, boss

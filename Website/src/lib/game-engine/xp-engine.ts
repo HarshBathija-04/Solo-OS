@@ -18,7 +18,7 @@
  * more, so farming trivial tasks is never optimal.
  */
 
-import type { AttributeKey, Difficulty, QuestStatus } from "@prisma/client";
+import type { AttributeKey, Difficulty, QuestStatus } from "@/lib/game-types";
 
 export const BASE_XP = 100;
 export const LEVEL_EXP = 1.5;

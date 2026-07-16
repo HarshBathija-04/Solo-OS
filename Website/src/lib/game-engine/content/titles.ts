@@ -1,4 +1,4 @@
-import type { Rarity } from "@prisma/client";
+import type { Rarity } from "@/lib/game-types";
 
 export interface TitleDef {
   key: string;

@@ -1,8 +1,7 @@
-import { requireUserId } from "@/lib/current-user";
-import { prisma } from "@/lib/prisma";
+import { getSkillTrees } from "@/lib/player-data";
 import { Panel } from "@/components/ui/panel";
 import { cn, pct } from "@/lib/utils";
-import type { SkillStatus } from "@prisma/client";
+import type { SkillStatus } from "@/lib/game-types";
 import { Lock, CircleDot, Loader, CheckCircle2 } from "lucide-react";
 
 const STATUS_META: Record<SkillStatus, { icon: typeof Lock; color: string; label: string }> = {
@@ -13,11 +12,7 @@ const STATUS_META: Record<SkillStatus, { icon: typeof Lock; color: string; label
 };
 
 export default async function SkillsPage() {
-  const userId = await requireUserId();
-  const trees = await prisma.skillTree.findMany({
-    where: { userId },
-    include: { nodes: { orderBy: [{ tier: "asc" }, { order: "asc" }], include: { progress: true } } },
-  });
+  const trees = await getSkillTrees();
 
   return (
     <div className="space-y-6">
@@ -39,7 +34,7 @@ export default async function SkillsPage() {
 
               <div className="mt-4 space-y-1">
                 {tree.nodes.map((node, i) => {
-                  const status = node.progress?.status ?? "LOCKED";
+                  const status = (node.progress?.status ?? "LOCKED") as SkillStatus;
                   const meta = STATUS_META[status];
                   const Icon = meta.icon;
                   const p = node.progress ? pct(node.progress.units, node.targetUnits) : 0;

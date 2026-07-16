@@ -4,7 +4,7 @@
  * Ported from the mobile app's `src/constants/timetable.ts` so both frontends
  * seed the same default schedule, categories, XP rewards, and study subjects.
  */
-import type { TimetableCategory } from "@prisma/client";
+import type { TimetableCategory } from "@/lib/game-types";
 
 // ── Default block shape (before it gets an id / userId in the DB) ──
 export interface DefaultBlock {
@@ -30,6 +30,9 @@ export const TIMETABLE_XP: Record<TimetableCategory, number> = {
   GAMING: 15,
   BREAK: 5,
   SLEEP: 0,
+  WORK: 60,
+  COMMUTE: 10,
+  NETWORKING: 40,
 };
 
 // ── Category metadata (label + accent + focus-mode mapping) ──
@@ -51,6 +54,9 @@ export const CATEGORY_DEFS: CategoryDef[] = [
   { code: "GAMING", label: "Gaming", color: "arc-violet", focusCategory: null },
   { code: "BREAK", label: "Break", color: "slate-400", focusCategory: null },
   { code: "SLEEP", label: "Sleep", color: "slate-500", focusCategory: null },
+  { code: "WORK", label: "Work", color: "arc-cyan", focusCategory: null },
+  { code: "COMMUTE", label: "Commute", color: "slate-400", focusCategory: null },
+  { code: "NETWORKING", label: "Networking", color: "arc-violet", focusCategory: null },
 ];
 
 export function categoryDef(code: TimetableCategory): CategoryDef {

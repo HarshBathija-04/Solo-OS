@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Play, CheckCircle2, SkipForward, Clock, AlertTriangle, Plus, Pencil, Trash2,
-  X, BookOpen, Zap,
+  X, BookOpen, Zap, ShieldAlert,
 } from "lucide-react";
-import type { TimetableCategory, TimetableState } from "@prisma/client";
+import type { TimetableCategory, TimetableDayType, TimetableState } from "@/lib/game-types";
 import {
   categoryDef, formatBlockTime, blockStartMinutes, blockEndMinutes,
   blockDurationMinutes, isSleepTime, STUDY_SUBJECTS, CATEGORY_DEFS, TIMETABLE_XP,
@@ -24,7 +25,10 @@ export interface ClientBlock {
   activity: string;
   category: TimetableCategory;
   xpReward: number;
+  dayType: TimetableDayType;
   state: TimetableState;
+  /** Reason recorded when today's state is EXCUSED. */
+  excuseReason?: string;
 }
 
 // Static Tailwind classes per category (template-literal class names can't be
@@ -40,6 +44,9 @@ const CATEGORY_TEXT: Record<TimetableCategory, string> = {
   GAMING: "text-arc-violet",
   BREAK: "text-slate-400",
   SLEEP: "text-slate-500",
+  WORK: "text-arc-cyan",
+  COMMUTE: "text-slate-400",
+  NETWORKING: "text-arc-violet",
 };
 
 const STATE_STYLE: Record<TimetableState, { chip: string; label: string }> = {
@@ -51,19 +58,34 @@ const STATE_STYLE: Record<TimetableState, { chip: string; label: string }> = {
   PAUSED: { chip: "text-rank-gold border-rank-gold/40 bg-rank-gold/10", label: "PAUSED" },
   LATE: { chip: "text-danger border-danger/30 bg-danger/[0.06]", label: "LATE" },
   FINISHED_EARLY: { chip: "text-arc-blue border-arc-blue/40 bg-arc-blue/10", label: "EARLY" },
+  EXCUSED: { chip: "text-rank-gold border-rank-gold/40 bg-rank-gold/10", label: "EXCUSED" },
 };
+
+const DAY_TABS: { value: Exclude<TimetableDayType, "ALL">; param: string; label: string }[] = [
+  { value: "OFFICE", param: "office", label: "Office" },
+  { value: "WFH", param: "wfh", label: "WFH" },
+  { value: "WEEKEND", param: "weekend", label: "Weekend" },
+];
 
 function nowMinutes(d: Date) {
   return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 }
 
-export function TimetableBoard({ initialBlocks }: { initialBlocks: ClientBlock[] }) {
+export function TimetableBoard({
+  initialBlocks,
+  dayType,
+}: {
+  initialBlocks: ClientBlock[];
+  dayType: Exclude<TimetableDayType, "ALL">;
+}) {
+  const router = useRouter();
   const [blocks, setBlocks] = useState<ClientBlock[]>(initialBlocks);
   const [now, setNow] = useState<Date>(() => new Date());
   const [editing, setEditing] = useState(false);
   const [editBlock, setEditBlock] = useState<ClientBlock | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [studyFor, setStudyFor] = useState<ClientBlock | null>(null);
+  const [excuseFor, setExcuseFor] = useState<ClientBlock | null>(null);
   const [, startTransition] = useTransition();
 
   // Live tick for the countdown / current-block detection.
@@ -86,15 +108,17 @@ export function TimetableBoard({ initialBlocks }: { initialBlocks: ClientBlock[]
     return null;
   }, [current, mins]);
 
-  function applyLocalState(id: string, state: TimetableState) {
-    setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, state } : b)));
+  function applyLocalState(id: string, state: TimetableState, excuseReason?: string) {
+    setBlocks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, state, excuseReason } : b)),
+    );
   }
 
-  function mutateState(id: string, state: TimetableState) {
-    applyLocalState(id, state);
+  function mutateState(id: string, state: TimetableState, reason?: string) {
+    applyLocalState(id, state, state === "EXCUSED" ? reason : undefined);
     startTransition(async () => {
       try {
-        await setBlockStateAction({ blockId: id, state });
+        await setBlockStateAction({ blockId: id, state, reason });
       } catch {
         /* keep optimistic local state; server revalidate will reconcile */
       }
@@ -118,6 +142,23 @@ export function TimetableBoard({ initialBlocks }: { initialBlocks: ClientBlock[]
 
   return (
     <div className="space-y-5">
+      {/* Day-type switcher */}
+      <div className="flex items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.02] p-1">
+        {DAY_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            className={`flex-1 rounded-lg px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-wider transition ${
+              dayType === tab.value
+                ? "border border-arc-cyan/40 bg-arc-cyan/10 text-arc-cyan"
+                : "border border-transparent text-slate-500 hover:text-slate-300"
+            }`}
+            onClick={() => router.push(`/timetable?day=${tab.param}`)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Current task hero */}
       <CurrentTaskCard block={current} now={now} />
 
@@ -164,6 +205,7 @@ export function TimetableBoard({ initialBlocks }: { initialBlocks: ClientBlock[]
             onStart={() => mutateState(b.id, "ACTIVE")}
             onComplete={() => mutateState(b.id, "COMPLETED")}
             onSkip={() => mutateState(b.id, "SKIPPED")}
+            onExcuse={() => setExcuseFor(b)}
             onLogStudy={() => setStudyFor(b)}
             onEdit={() => setEditBlock(b)}
             onDelete={() => {
@@ -179,6 +221,7 @@ export function TimetableBoard({ initialBlocks }: { initialBlocks: ClientBlock[]
       {(showAdd || editBlock) && (
         <BlockModal
           block={editBlock}
+          viewDayType={dayType}
           onClose={() => {
             setShowAdd(false);
             setEditBlock(null);
@@ -201,6 +244,17 @@ export function TimetableBoard({ initialBlocks }: { initialBlocks: ClientBlock[]
           onLogged={() => {
             applyLocalState(studyFor.id, "COMPLETED");
             setStudyFor(null);
+          }}
+        />
+      )}
+
+      {excuseFor && (
+        <ExcuseModal
+          block={excuseFor}
+          onClose={() => setExcuseFor(null)}
+          onExcused={(reason) => {
+            mutateState(excuseFor.id, "EXCUSED", reason);
+            setExcuseFor(null);
           }}
         />
       )}
@@ -255,7 +309,7 @@ function CurrentTaskCard({ block, now }: { block: ClientBlock | null; now: Date 
 }
 
 function TimelineRow({
-  block, isCurrent, editing, onStart, onComplete, onSkip, onLogStudy, onEdit, onDelete,
+  block, isCurrent, editing, onStart, onComplete, onSkip, onExcuse, onLogStudy, onEdit, onDelete,
 }: {
   block: ClientBlock;
   isCurrent: boolean;
@@ -263,18 +317,28 @@ function TimelineRow({
   onStart: () => void;
   onComplete: () => void;
   onSkip: () => void;
+  onExcuse: () => void;
   onLogStudy: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const def = categoryDef(block.category);
   const st = STATE_STYLE[block.state];
-  const done = block.state === "COMPLETED" || block.state === "FINISHED_EARLY" || block.state === "SKIPPED";
+  const excused = block.state === "EXCUSED";
+  const done =
+    block.state === "COMPLETED" ||
+    block.state === "FINISHED_EARLY" ||
+    block.state === "SKIPPED" ||
+    excused;
 
   return (
     <div
       className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition ${
-        isCurrent ? "border-arc-cyan/40 bg-arc-cyan/[0.05]" : "border-white/[0.06] bg-white/[0.02]"
+        excused
+          ? "border-rank-gold/25 bg-rank-gold/[0.04] opacity-70"
+          : isCurrent
+            ? "border-arc-cyan/40 bg-arc-cyan/[0.05]"
+            : "border-white/[0.06] bg-white/[0.02]"
       }`}
     >
       <div className="w-20 shrink-0">
@@ -293,6 +357,11 @@ function TimelineRow({
             </span>
           )}
         </div>
+        {excused && block.excuseReason && (
+          <p className="mt-1 truncate text-xs italic text-rank-gold/80" title={block.excuseReason}>
+            Excused: {block.excuseReason}
+          </p>
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
@@ -327,6 +396,16 @@ function TimelineRow({
                 <SkipForward className="h-4 w-4" />
               </button>
             )}
+            {!done && (
+              <button
+                className="btn-ghost px-2 text-rank-gold"
+                onClick={onExcuse}
+                aria-label="Excuse block"
+                title="Raise an exception — excuse this block with a reason"
+              >
+                <ShieldAlert className="h-4 w-4" />
+              </button>
+            )}
             {done && <Clock className="h-4 w-4 text-slate-600" />}
           </>
         )}
@@ -336,15 +415,24 @@ function TimelineRow({
 }
 
 // ── Add / Edit modal ──────────────────────────────────────────────
+const DAY_TYPE_OPTIONS: { value: TimetableDayType; label: string }[] = [
+  { value: "ALL", label: "Every day" },
+  { value: "OFFICE", label: "Office" },
+  { value: "WFH", label: "WFH" },
+  { value: "WEEKEND", label: "Weekend" },
+];
+
 function BlockModal({
-  block, onClose, onSaved,
+  block, viewDayType, onClose, onSaved,
 }: {
   block: ClientBlock | null;
+  viewDayType: Exclude<TimetableDayType, "ALL">;
   onClose: () => void;
   onSaved: (b: ClientBlock) => void;
 }) {
   const [activity, setActivity] = useState(block?.activity ?? "");
   const [category, setCategory] = useState<TimetableCategory>(block?.category ?? "STUDY");
+  const [dayType, setDayType] = useState<TimetableDayType>(block?.dayType ?? viewDayType);
   const [start, setStart] = useState(
     block ? `${pad(block.startHour)}:${pad(block.startMin)}` : "06:00",
   );
@@ -361,6 +449,7 @@ function BlockModal({
       activity: activity.trim() || "Untitled",
       category,
       xpReward: TIMETABLE_XP[category],
+      dayType,
     };
     try {
       if (block) {
@@ -387,6 +476,13 @@ function BlockModal({
         ))}
       </select>
 
+      <label className="sys-label mt-3">Day Type</label>
+      <select className="tt-input" value={dayType} onChange={(e) => setDayType(e.target.value as TimetableDayType)}>
+        {DAY_TYPE_OPTIONS.map((d) => (
+          <option key={d.value} value={d.value}>{d.label}</option>
+        ))}
+      </select>
+
       <div className="mt-3 flex gap-3">
         <div className="flex-1">
           <label className="sys-label">Start</label>
@@ -400,6 +496,45 @@ function BlockModal({
 
       <button className="btn-primary mt-5 w-full justify-center" disabled={busy} onClick={save}>
         {busy ? "Saving…" : "Save Block"}
+      </button>
+    </Modal>
+  );
+}
+
+// ── Excuse ("raise an exception") modal ───────────────────────────
+function ExcuseModal({
+  block, onClose, onExcused,
+}: {
+  block: ClientBlock;
+  onClose: () => void;
+  onExcused: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const trimmed = reason.trim();
+
+  return (
+    <Modal title="Raise Exception" onClose={onClose}>
+      <p className="text-sm text-slate-400">
+        Excuse &ldquo;{block.activity}&rdquo; for a rare, valid reason. No XP is awarded, but it
+        won&apos;t count as missed or skipped.
+      </p>
+
+      <label className="sys-label mt-4">Reason</label>
+      <textarea
+        className="tt-input h-20 resize-none"
+        value={reason}
+        maxLength={300}
+        placeholder="e.g. Doctor's appointment"
+        onChange={(e) => setReason(e.target.value)}
+      />
+      <p className="mt-1 text-right font-mono text-[10px] text-slate-600">{trimmed.length}/300</p>
+
+      <button
+        className="btn-primary mt-4 w-full justify-center"
+        disabled={trimmed.length === 0}
+        onClick={() => onExcused(trimmed)}
+      >
+        <ShieldAlert className="h-4 w-4" /> Excuse Block
       </button>
     </Modal>
   );

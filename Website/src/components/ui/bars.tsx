@@ -1,4 +1,4 @@
-import type { Difficulty, Rarity } from "@prisma/client";
+import type { Difficulty, Rarity } from "@/lib/game-types";
 import { cn, pct } from "@/lib/utils";
 
 export function ProgressBar({

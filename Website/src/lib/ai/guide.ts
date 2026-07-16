@@ -4,7 +4,6 @@
  * derived from the player's own logs. Works with zero AI credentials.
  */
 import { getDailyMetrics, getPerformance } from "@/lib/player-data";
-import { prisma } from "@/lib/prisma";
 import { weekKey } from "@/lib/date";
 
 export interface Insight {

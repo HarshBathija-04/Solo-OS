@@ -1,4 +1,4 @@
-import type { AttributeKey } from "@prisma/client";
+import type { AttributeKey } from "@/lib/game-types";
 
 export interface AttributeDef {
   key: AttributeKey;

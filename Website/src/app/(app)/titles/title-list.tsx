@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Crown, Check } from "lucide-react";
-import type { Rarity } from "@prisma/client";
+import type { Rarity } from "@/lib/game-types";
 import { Panel } from "@/components/ui/panel";
 import { RarityBadge } from "@/components/ui/bars";
 import { equipTitleAction } from "@/app/actions";

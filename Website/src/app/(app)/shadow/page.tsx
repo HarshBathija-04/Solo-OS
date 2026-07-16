@@ -1,14 +1,11 @@
-import { requireUserId } from "@/lib/current-user";
-import { getShadowHabitStatus } from "@/lib/player-data";
-import { prisma } from "@/lib/prisma";
+import { getShadowHabitStatus, getUrgeLogs } from "@/lib/player-data";
 import { ShadowPanel, type ShadowVM } from "./shadow-panel";
 import { Panel } from "@/components/ui/panel";
 
 export default async function ShadowPage() {
-  const userId = await requireUserId();
   const [status, urges] = await Promise.all([
-    getShadowHabitStatus(userId),
-    prisma.urgeLog.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 8 }),
+    getShadowHabitStatus(),
+    getUrgeLogs(8),
   ]);
 
   const vms: ShadowVM[] = status.map((s) => ({

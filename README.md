@@ -1,44 +1,49 @@
-# SOLO OS
+# ARISE OS
 
 A real-life RPG progression operating system with **one shared backend** and **two frontends**.
 
 ## Structure
 
 ```
-Solo-OS/
-├── Website/        # Next.js (App Router) + Prisma + PostgreSQL + NextAuth — the canonical backend + web app
-└── Mobile app/     # Expo / React Native — local-first, syncs to the website's REST API
+Arise-OS/
+├── Website/        # Next.js (App Router) — web frontend
+├── backend/        # Express API — canonical backend (supabase-js)
+└── mobile/         # Flutter — Windows/Android/iOS app
 ```
 
 ## Architecture
 
-- **Canonical backend**: the `Website` app owns the database (Prisma + PostgreSQL/Supabase) and exposes a REST API under `/api/*`.
-- **Web frontend**: server components + server actions → service layer → Prisma. Authenticated with NextAuth (cookie session).
-- **Mobile frontend**: local-first Zustand stores that sync to the same backend over REST using a JWT bearer token (from `/api/auth/login`). Works fully offline; syncs when signed in.
+- **Canonical backend**: the `backend` app owns all game logic (XP, quests, streaks) via Express + supabase-js, and exposes a REST API under `/v1/*`.
+- **Web frontend**: Next.js app that calls the Express API. Authenticated with Supabase Auth.
+- **Mobile frontend**: Flutter app using Riverpod, connects to the same Express API with a Supabase JWT bearer token.
 - **Timetable** is fully relational and shared by both frontends (`TimetableBlock` / `TimetableBlockLog` / `StudyLog`).
-- **Core game state** syncs cross-device via a per-user JSON snapshot (`/api/state`).
 
 ## Getting started
+
+### Backend
+```bash
+cd backend
+npm install
+npm run dev               # http://localhost:4000
+```
 
 ### Website
 ```bash
 cd Website
-cp .env.example .env      # fill DATABASE_URL, DIRECT_URL, AUTH_SECRET, AUTH_URL
 npm install
-npx prisma generate && npx prisma db push
 npm run dev               # http://localhost:3000
 ```
 
 ### Mobile app
 ```bash
-cd "Mobile app"
-cp .env.example .env      # set EXPO_PUBLIC_API_BASE_URL to your running website
-npm install
-npx expo start
+cd mobile
+flutter pub get
+flutter run -d windows \
+  --dart-define=SUPABASE_URL=https://<project>.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=<anon-key> \
+  --dart-define=API_BASE_URL=http://localhost:4000
 ```
-
-> On a physical device, set `EXPO_PUBLIC_API_BASE_URL` to your computer's LAN IP (not `localhost`).
 
 ## Notes
 - `.env` files are git-ignored — never commit real secrets.
-- `AUTH_SECRET` signs both the NextAuth web session and the mobile bearer tokens.
+- See `ARCHITECTURE.md` for full deployment and sync details.

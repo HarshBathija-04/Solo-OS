@@ -3,14 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
-import { requireUserId } from "@/lib/current-user";
-import {
-  setBlockState,
-  addBlock,
-  editBlock,
-  deleteBlock,
-  logStudy,
-} from "@/lib/game-engine/timetable-service";
+import { apiFetch } from "@/lib/api-client";
 
 const timetableState = z.enum([
   "UPCOMING",
@@ -21,6 +14,7 @@ const timetableState = z.enum([
   "PAUSED",
   "LATE",
   "FINISHED_EARLY",
+  "EXCUSED",
 ]);
 
 const category = z.enum([
@@ -34,52 +28,73 @@ const category = z.enum([
   "GAMING",
   "BREAK",
   "SLEEP",
+  "WORK",
+  "COMMUTE",
+  "NETWORKING",
 ]);
 
+const dayType = z.enum(["ALL", "OFFICE", "WFH", "WEEKEND"]);
+
 const blockInput = z.object({
-  order: z.number().int().min(0).max(100),
+  order: z.number().int().min(0).max(100).optional(),
   startHour: z.number().int().min(0).max(23),
   startMin: z.number().int().min(0).max(59),
   endHour: z.number().int().min(0).max(23),
   endMin: z.number().int().min(0).max(59),
   activity: z.string().min(1).max(80),
   category,
-  xpReward: z.number().int().min(0).max(1000),
+  xpReward: z.number().int().min(0).max(500),
+  dayType: dayType.optional(),
 });
 
-export async function setBlockStateAction(input: { blockId: string; state: string }) {
-  const userId = await requireUserId();
-  const { blockId, state } = z
-    .object({ blockId: z.string().min(1), state: timetableState })
+export async function setBlockStateAction(input: {
+  blockId: string;
+  state: string;
+  reason?: string;
+}) {
+  const { blockId, state, reason } = z
+    .object({
+      blockId: z.string().min(1),
+      state: timetableState,
+      reason: z.string().max(300).optional(),
+    })
     .parse(input);
-  const res = await setBlockState(userId, blockId, state);
+  const res = await apiFetch(`/v1/timetable/blocks/${blockId}/state`, {
+    method: "POST",
+    body: JSON.stringify(state === "EXCUSED" && reason ? { state, reason } : { state }),
+  });
   revalidatePath("/timetable");
   revalidatePath("/");
-  return res;
+  const { ok: _ok, ...rest } = res;
+  return rest as { xpAwarded: number };
 }
 
 export async function addBlockAction(input: z.infer<typeof blockInput>) {
-  const userId = await requireUserId();
-  const data = blockInput.parse(input);
-  const block = await addBlock(userId, data);
+  const { order: _order, ...data } = blockInput.parse(input);
+  const { block } = await apiFetch("/v1/timetable/blocks", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
   revalidatePath("/timetable");
   return block;
 }
 
 export async function editBlockAction(input: { blockId: string; updates: Partial<z.infer<typeof blockInput>> }) {
-  const userId = await requireUserId();
   const { blockId, updates } = z
     .object({ blockId: z.string().min(1), updates: blockInput.partial() })
     .parse(input);
-  const block = await editBlock(userId, blockId, updates);
+  const { order: _order, ...data } = updates;
+  const { block } = await apiFetch(`/v1/timetable/blocks/${blockId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
   revalidatePath("/timetable");
   return block;
 }
 
 export async function deleteBlockAction(input: { blockId: string }) {
-  const userId = await requireUserId();
   const { blockId } = z.object({ blockId: z.string().min(1) }).parse(input);
-  await deleteBlock(userId, blockId);
+  await apiFetch(`/v1/timetable/blocks/${blockId}`, { method: "DELETE" });
   revalidatePath("/timetable");
   return { ok: true };
 }
@@ -93,7 +108,6 @@ export async function logStudyAction(input: {
   notes?: string;
   missionLinked?: string;
 }) {
-  const userId = await requireUserId();
   const data = z
     .object({
       blockId: z.string().min(1),
@@ -105,8 +119,14 @@ export async function logStudyAction(input: {
       missionLinked: z.string().max(120).optional(),
     })
     .parse(input);
-  const res = await logStudy(userId, data);
+  // The API requires at least 1 minute; a 0-minute log earns nothing anyway.
+  if (data.durationMinutes < 1) return { xpAwarded: 0 };
+  const res = await apiFetch("/v1/timetable/study", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
   revalidatePath("/timetable");
   revalidatePath("/");
-  return res;
+  const { ok: _ok, ...rest } = res;
+  return rest as { xpAwarded: number };
 }

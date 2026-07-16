@@ -8,8 +8,8 @@ const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", 
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Solo-OS",
-  description: "Solo-OS — your real-life RPG progression operating system.",
+  title: "Arise OS",
+  description: "Arise OS — your real-life RPG progression operating system.",
 };
 
 export const viewport: Viewport = {

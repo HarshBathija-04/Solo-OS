@@ -2,7 +2,7 @@ import { Skull, Zap } from "lucide-react";
 import { Panel } from "@/components/ui/panel";
 import { RarityBadge } from "@/components/ui/bars";
 import { cn, pct } from "@/lib/utils";
-import type { Boss, BossBattle, BossBattleLog } from "@prisma/client";
+import type { Boss, BossBattle, BossBattleLog } from "@/lib/game-types";
 
 type BattleWithBoss = BossBattle & { boss: Boss; logs: BossBattleLog[] };
 
