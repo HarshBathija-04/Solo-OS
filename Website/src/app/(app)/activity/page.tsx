@@ -1,14 +1,19 @@
-import { getActivityFeed, getRecentNotifications } from "@/lib/player-data";
+import { getActivityFeed, getRecentNotifications, getHeatmap } from "@/lib/player-data";
 import { Panel, PanelHeader } from "@/components/ui/panel";
-import { Coins, Activity as ActivityIcon, Bell } from "lucide-react";
+import { Coins, Activity as ActivityIcon, Bell, CalendarDays } from "lucide-react";
+import { ActivityHeatmap } from "@/components/game/activity-heatmap";
 
 export default async function ActivityPage() {
-  const [feed, notifications] = await Promise.all([
+  const [feed, notifications, heatmap] = await Promise.all([
     getActivityFeed(),
     getRecentNotifications(undefined, 30),
+    getHeatmap(undefined, 365),
   ]);
   const activities = feed.activities.slice(0, 30);
   const coins = feed.coins.slice(0, 20);
+
+  // calculate total contributions for the year
+  const totalContributions = heatmap.reduce((acc, cell) => acc + (cell.intensity > 0 ? cell.intensity : 0), 0);
 
   return (
     <div className="space-y-6">
@@ -16,6 +21,13 @@ export default async function ActivityPage() {
         <p className="sys-label">Insight</p>
         <h1 className="font-display text-2xl font-bold text-slate-100">Activity Log</h1>
       </div>
+
+      <Panel>
+        <PanelHeader label={`${totalContributions} contributions in the last year`} title="Activity Heatmap" right={<CalendarDays className="mr-4 mt-1 h-4 w-4 text-slate-500" />} />
+        <div className="px-5 pb-5 pt-2">
+          <ActivityHeatmap data={heatmap} />
+        </div>
+      </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel>
