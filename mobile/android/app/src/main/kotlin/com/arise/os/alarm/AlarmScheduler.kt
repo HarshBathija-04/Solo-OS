@@ -138,7 +138,15 @@ object AlarmScheduler {
 
                 val piAlarm = pendingIntent(context, block, date, TYPE_ALARM, dayOffset)
                 // Use setAlarmClock to bypass Doze mode rate limiting for the actual alarm
-                val info = AlarmManager.AlarmClockInfo(fireAt.timeInMillis, piAlarm)
+                // showIntent MUST be an Activity PendingIntent, or it crashes on Android 12+
+                val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                val showIntent = PendingIntent.getActivity(
+                    context,
+                    requestCode(block.optString("id"), TYPE_ALARM, dayOffset),
+                    launchIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                val info = AlarmManager.AlarmClockInfo(fireAt.timeInMillis, showIntent)
                 am.setAlarmClock(info, piAlarm)
                 scheduled++
 
@@ -206,7 +214,14 @@ object AlarmScheduler {
         
         val fireAtMs = System.currentTimeMillis() + delayMs
         if (type == TYPE_ALARM) {
-            am.setAlarmClock(AlarmManager.AlarmClockInfo(fireAtMs, pi), pi)
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            val showIntent = PendingIntent.getActivity(
+                context,
+                requestCode(block.optString("id"), type, 2),
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            am.setAlarmClock(AlarmManager.AlarmClockInfo(fireAtMs, showIntent), pi)
         } else {
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fireAtMs, pi)
         }
