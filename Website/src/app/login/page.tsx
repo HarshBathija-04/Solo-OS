@@ -79,7 +79,7 @@ export default function LoginPage() {
             <Zap className="h-8 w-8 text-arc-blue" />
           </div>
           <h1 className="mt-4 font-display text-xl font-bold tracking-tight">
-            SOLO<span className="text-arc-blue">//</span>OS
+            ARISE<span className="text-arc-blue">//</span>OS
           </h1>
           <p className="sys-label mt-1">
             {mode === "login" ? "Authenticate to enter the System" : "Register a new hunter"}

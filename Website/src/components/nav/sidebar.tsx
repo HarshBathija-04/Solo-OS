@@ -53,9 +53,9 @@ function Brand() {
       </div>
       <div className="leading-tight">
         <div className="font-display text-sm font-bold tracking-tight text-slate-100">
-          SOLO<span className="text-arc-blue">//</span>OS
+          ARISE<span className="text-arc-blue">//</span>OS
         </div>
-        <div className="sys-label">Solo Protocol</div>
+        <div className="sys-label">Arise Protocol</div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Zap } from "lucide-react";
 
 const LINES = [
-  "> initializing solo protocol …",
+  "> initializing arise protocol …",
   "> binding neural interface … OK",
   "> loading player manifest … OK",
   "> calibrating attribute matrix … OK",
@@ -43,7 +43,7 @@ export default function BootPage() {
             <span className="absolute inset-0 animate-pulse-glow rounded-2xl ring-1 ring-arc-blue/40" />
           </div>
           <h1 className="mt-5 font-display text-2xl font-bold tracking-tight">
-            SOLO<span className="text-arc-blue">//</span>OS
+            ARISE<span className="text-arc-blue">//</span>OS
           </h1>
         </motion.div>
 
