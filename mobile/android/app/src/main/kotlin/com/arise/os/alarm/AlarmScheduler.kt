@@ -136,11 +136,10 @@ object AlarmScheduler {
                 }
                 if (fireAt.timeInMillis <= System.currentTimeMillis()) continue
 
-                am.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    fireAt.timeInMillis,
-                    pendingIntent(context, block, date, TYPE_ALARM, dayOffset),
-                )
+                val piAlarm = pendingIntent(context, block, date, TYPE_ALARM, dayOffset)
+                // Use setAlarmClock to bypass Doze mode rate limiting for the actual alarm
+                val info = AlarmManager.AlarmClockInfo(fireAt.timeInMillis, piAlarm)
+                am.setAlarmClock(info, piAlarm)
                 scheduled++
 
                 val preAt = fireAt.timeInMillis - lead * 60_000L
@@ -204,7 +203,13 @@ object AlarmScheduler {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMs, pi)
+        
+        val fireAtMs = System.currentTimeMillis() + delayMs
+        if (type == TYPE_ALARM) {
+            am.setAlarmClock(AlarmManager.AlarmClockInfo(fireAtMs, pi), pi)
+        } else {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, fireAtMs, pi)
+        }
     }
 
     /** Fire a test alarm in `seconds` (manual verification hook). */
