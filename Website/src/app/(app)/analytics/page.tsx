@@ -1,7 +1,7 @@
 import { requireUserId } from "@/lib/current-user";
 import { getDailyMetrics, getHeatmap, getPerformance } from "@/lib/player-data";
 import { Panel, PanelHeader } from "@/components/ui/panel";
-import { Heatmap } from "@/components/charts/heatmap";
+import { ActivityHeatmap } from "@/components/game/activity-heatmap";
 import { StudyFocusChart, DistractionChart, ScoreRadar } from "@/components/charts/trend-charts";
 import { MetricLogger } from "./metric-logger";
 
@@ -53,8 +53,8 @@ export default async function AnalyticsPage() {
 
       <Panel>
         <PanelHeader label="Consistency" title="Activity Heatmap (120 days)" />
-        <div className="p-5">
-          <Heatmap cells={heatmap} />
+        <div className="px-5 pb-5 pt-2">
+          <ActivityHeatmap data={heatmap} />
         </div>
       </Panel>
 
