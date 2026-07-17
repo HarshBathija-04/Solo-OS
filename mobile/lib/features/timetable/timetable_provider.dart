@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/alarms/alarm_sync_service.dart';
 import '../../core/api/api_providers.dart';
 import '../../core/models/models.dart';
 import '../dashboard/dashboard_provider.dart';
@@ -178,12 +179,15 @@ class TimetableActions {
     _invalidate();
   }
 
-  /// PATCH /v1/settings — toggle timetable alarms on/off.
+  /// PATCH /v1/settings — toggle timetable alarms on/off. Forces a native
+  /// alarm resync immediately so the change applies even if the FCM resync
+  /// push is delayed or unavailable.
   Future<void> toggleAlarms(bool enabled) async {
     await _ref.read(apiClientProvider).patch('/v1/settings', body: {
       'timetableAlarmsEnabled': enabled,
     });
     _ref.invalidate(userSettingsProvider);
+    await _ref.read(alarmSyncServiceProvider).sync(force: true);
   }
 
   void _invalidate() {
