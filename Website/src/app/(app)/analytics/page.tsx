@@ -9,7 +9,7 @@ export default async function AnalyticsPage() {
   const userId = await requireUserId();
   const [metrics, heatmap, perf] = await Promise.all([
     getDailyMetrics(userId, 30),
-    getHeatmap(userId, 120),
+    getHeatmap(userId, 365),
     getPerformance(userId),
   ]);
 
@@ -52,7 +52,7 @@ export default async function AnalyticsPage() {
       </div>
 
       <Panel>
-        <PanelHeader label="Consistency" title="Activity Heatmap (120 days)" />
+        <PanelHeader label="Consistency" title="Activity Heatmap (365 days)" />
         <div className="px-5 pb-5 pt-2">
           <ActivityHeatmap data={heatmap} />
         </div>
