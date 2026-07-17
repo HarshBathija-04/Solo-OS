@@ -19,7 +19,9 @@ export function ActivityHeatmap({ data }: { data: HeatmapCell[] }) {
 
   // Pad the beginning so that the first day aligns with its day of the week.
   // 0 = Sunday, 1 = Monday...
-  const firstDate = new Date(data[0].date);
+  const firstCell = data[0];
+  if (!firstCell) return null;
+  const firstDate = new Date(firstCell.date);
   const startPad = firstDate.getDay(); 
 
   const paddedData = [
@@ -45,7 +47,7 @@ export function ActivityHeatmap({ data }: { data: HeatmapCell[] }) {
         // Prevent overlapping month labels by ensuring some distance
         const lastLabel = monthLabels[monthLabels.length - 1];
         if (!lastLabel || (colIndex - lastLabel.colIndex) > 2) {
-          monthLabels.push({ label: months[m], colIndex });
+          monthLabels.push({ label: months[m]!, colIndex });
           lastMonth = m;
         }
       }
