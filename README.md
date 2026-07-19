@@ -20,11 +20,17 @@ Arise-OS/
 
 ## Demo
 
-You can try out the live web dashboard here: **[https://solo-os-seven.vercel.app](https://solo-os-seven.vercel.app)**
+Anyone can try Arise OS — no signup needed.
 
-**Demo Credentials:**
+**📱 Android app:** download the APK from the [latest release](https://github.com/HarshBathija-04/ARISE-OS/releases/latest) and install it (allow installs from unknown sources if prompted).
+
+**🌐 Web dashboard:** **[https://solo-os-seven.vercel.app](https://solo-os-seven.vercel.app)**
+
+**Demo Credentials** (both app and website have a tap-to-fill button on the login screen):
 - **Email:** `demo@arise.os`
 - **Password:** `password123`
+
+> The demo account is shared and may be reset periodically.
 
 ## Getting started
 
