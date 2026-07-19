@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Swords, Target, Timer, BarChart3, Hexagon, GitBranch,
   Skull, Trophy, Crown, Flame, EyeOff, HeartPulse, Coins, FileText, Bot,
-  Calendar, CalendarClock, History, Settings,
+  Calendar, CalendarClock, History, Settings, BookOpen,
 } from "lucide-react";
 
 export interface NavItem {
@@ -13,6 +13,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, group: "Core" },
+  { href: "/manual", label: "How It Works", icon: BookOpen, group: "Core" },
   { href: "/quests", label: "Daily Quests", icon: Target, group: "Core" },
   { href: "/main-quests", label: "Main Quests", icon: Swords, group: "Core" },
   { href: "/focus", label: "Focus Mode", icon: Timer, group: "Core" },
