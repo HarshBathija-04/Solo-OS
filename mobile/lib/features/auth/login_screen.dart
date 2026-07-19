@@ -101,6 +101,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         : const Text('ENTER THE GATE'),
                   ),
                   const SizedBox(height: 8),
+                  // Demo account hint — tap to autofill credentials.
+                  InkWell(
+                    onTap: () {
+                      _email.text = 'demo@arise.os';
+                      _password.text = 'password123';
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: AriseColors.blue.withValues(alpha: 0.35)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Column(
+                        children: [
+                          Text(
+                            'DEMO ACCESS — TAP TO FILL',
+                            style: TextStyle(
+                                color: AriseColors.blue,
+                                letterSpacing: 1,
+                                fontSize: 11),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'demo@arise.os  ·  password123',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   TextButton(
                     onPressed: () => context.go('/signup'),
                     child: const Text(

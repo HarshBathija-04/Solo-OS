@@ -117,6 +117,21 @@ export default function LoginPage() {
             />
           </div>
           <LoginButton pending={pending} label={mode === "login" ? "Enter the System" : "Awaken"} />
+          {mode === "login" && (
+            <button
+              type="button"
+              onClick={() => {
+                const email = document.getElementById("email") as HTMLInputElement | null;
+                const password = document.getElementById("password") as HTMLInputElement | null;
+                if (email) email.value = "demo@arise.os";
+                if (password) password.value = "password123";
+              }}
+              className="w-full rounded-lg border border-arc-blue/30 bg-arc-blue/5 px-3 py-2 text-center transition-colors hover:bg-arc-blue/10"
+            >
+              <span className="sys-label block text-arc-blue">Demo access — tap to fill</span>
+              <span className="mt-0.5 block text-xs text-slate-400">demo@arise.os · password123</span>
+            </button>
+          )}
           <p className="text-center text-xs text-slate-600">
             {mode === "login" ? (
               <>
