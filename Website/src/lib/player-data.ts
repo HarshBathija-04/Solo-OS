@@ -80,8 +80,19 @@ function mapStreak(s: any) {
 // ─────────────────── core read functions (signatures preserved) ───────────────────
 
 export async function getProfileView(_userId?: string) {
-  const { profile } = await apiFetch<{ profile: any }>("/v1/profile");
-  return profile;
+  try {
+    const { profile } = await apiFetch<{ profile: any }>("/v1/profile");
+    return profile;
+  } catch (e) {
+    // Self-heal: the account exists in Supabase Auth but was never seeded
+    // (client-side bootstrap is fire-and-forget and can fail silently).
+    if (e instanceof Error && e.message === "Profile not found") {
+      await apiFetch("/v1/account/bootstrap", { method: "POST", body: "{}" });
+      const { profile } = await apiFetch<{ profile: any }>("/v1/profile");
+      return profile;
+    }
+    throw e;
+  }
 }
 
 export async function getAttributes(_userId?: string) {
