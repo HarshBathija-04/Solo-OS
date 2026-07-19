@@ -32,19 +32,57 @@ class ApiClient {
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 20),
             )) {
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        final token =
-            Supabase.instance.client.auth.currentSession?.accessToken;
+    // Queued so concurrent requests wait for a single token refresh instead
+    // of racing each other.
+    _dio.interceptors.add(QueuedInterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await _freshToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
       },
+      onError: (error, handler) async {
+        // Stale token slipped through (e.g. cold start with a restored but
+        // expired session): force-refresh once and replay the request.
+        if (error.response?.statusCode == 401 &&
+            error.requestOptions.extra['retried'] != true) {
+          final token = await _freshToken(force: true);
+          if (token != null) {
+            final opts = error.requestOptions
+              ..headers['Authorization'] = 'Bearer $token'
+              ..extra['retried'] = true;
+            try {
+              return handler.resolve(await _dio.fetch<dynamic>(opts));
+            } on DioException catch (e) {
+              return handler.next(e);
+            }
+          }
+        }
+        handler.next(error);
+      },
     ));
   }
 
   final Dio _dio;
+
+  /// Returns a non-expired access token, refreshing the session if needed.
+  /// Falls back to the current (possibly stale) token if refresh fails, e.g.
+  /// while offline — the request will then fail with a normal network error.
+  Future<String?> _freshToken({bool force = false}) async {
+    final auth = Supabase.instance.client.auth;
+    final session = auth.currentSession;
+    if (session == null) return null;
+    if (force || session.isExpired) {
+      try {
+        final res = await auth.refreshSession();
+        return res.session?.accessToken ?? session.accessToken;
+      } catch (_) {
+        return session.accessToken;
+      }
+    }
+    return session.accessToken;
+  }
 
   Future<Map<String, dynamic>> get(String path,
       {Map<String, dynamic>? query}) async {
