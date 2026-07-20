@@ -8,7 +8,7 @@
 
 *Log real actions — study, focus, workouts, habits — and watch your XP, attributes, skills, streaks, and boss battles grow from them automatically. No fantasy stats. No wishful thinking. Just reality, gamified.*
 
-[![Download APK](https://img.shields.io/badge/Android-Download%20APK%20v1.0.1-3DDC84?logo=android&logoColor=white)](https://github.com/HarshBathija-04/ARISE-OS/releases/download/v1.0.1/arise-os-v1.0.1.apk)
+[![Download APK](https://img.shields.io/badge/Android-Download%20APK%20v1.0.2-3DDC84?logo=android&logoColor=white)](https://github.com/HarshBathija-04/ARISE-OS/releases/download/v1.0.2/arise-os-v1.0.2.apk)
 [![Web App](https://img.shields.io/badge/Web-arise--os--web.vercel.app-000000?logo=vercel&logoColor=white)](https://arise-os-web.vercel.app)
 [![Latest Release](https://img.shields.io/github/v/release/HarshBathija-04/ARISE-OS?label=Latest%20Release&color=blue)](https://github.com/HarshBathija-04/ARISE-OS/releases/latest)
 
@@ -51,7 +51,7 @@ Anyone can try Arise OS — no signup needed.
 
 | Platform | Link |
 |---|---|
-| 📱 **Android APK** | **[⬇ Direct download (v1.0.1)](https://github.com/HarshBathija-04/ARISE-OS/releases/download/v1.0.1/arise-os-v1.0.1.apk)** · [all releases](https://github.com/HarshBathija-04/ARISE-OS/releases/latest) |
+| 📱 **Android APK** | **[⬇ Direct download (v1.0.2)](https://github.com/HarshBathija-04/ARISE-OS/releases/download/v1.0.2/arise-os-v1.0.2.apk)** · [all releases](https://github.com/HarshBathija-04/ARISE-OS/releases/latest) |
 | 🌐 **Web dashboard** | **[arise-os-web.vercel.app](https://arise-os-web.vercel.app)** |
 
 **Demo credentials** (both app and website have a tap-to-fill button on the login screen):
