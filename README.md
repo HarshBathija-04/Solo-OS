@@ -22,7 +22,7 @@ Arise-OS/
 
 Anyone can try Arise OS — no signup needed.
 
-**📱 Android app:** download the APK from the [latest release](https://github.com/HarshBathija-04/ARISE-OS/releases/latest) and install it (allow installs from unknown sources if prompted).
+**📱 Android app:** **[⬇ Download APK (v1.0.1)](https://github.com/HarshBathija-04/ARISE-OS/releases/download/v1.0.1/arise-os-v1.0.1.apk)** — or browse the [latest release](https://github.com/HarshBathija-04/ARISE-OS/releases/latest). Install it on your device (allow installs from unknown sources if prompted).
 
 **🌐 Web dashboard:** **[https://arise-os-web.vercel.app](https://arise-os-web.vercel.app)**
 
